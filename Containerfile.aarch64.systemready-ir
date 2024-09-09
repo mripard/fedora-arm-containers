@@ -1,0 +1,24 @@
+FROM --platform=linux/arm64 fedora-minimal:40
+
+COPY overlays/systemready-ir /
+
+RUN \
+	mkdir -p /efi/EFI/BOOT/ \
+	&& \
+	dnf5 install -y \
+		sdubby \
+		systemd-boot-unsigned \
+	&& \
+	cp /usr/lib/systemd/boot/efi/systemd-bootaa64.efi /efi/EFI/BOOT/BOOTAA64.efi \
+	&& \
+	dnf5 install -y \
+		kernel \
+		kernel-core \
+		kernel-modules \
+		systemd-networkd \
+		systemd-resolved \
+		vim-minimal \
+	&& \
+	sed -i 's|/efi/|/|' /efi/loader/entries/*.conf
+
+CMD ["/bin/sh"]
