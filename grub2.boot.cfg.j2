@@ -1,0 +1,37 @@
+set timeout=3
+
+# load the grubenv file
+load_env
+
+# selection of the next boot entry via variables 'next_entry' and
+# `saved_entry` present in the 'grubenv' file. Both variables are
+# set by grub tools, like grub2-reboot, grub2-set-default
+
+if [ "${next_entry}" ] ; then
+   set default="${next_entry}"
+   set next_entry=
+   save_env next_entry
+   set boot_once=true
+else
+   set default="${saved_entry}"
+fi
+
+insmod part_gpt
+insmod ext2
+search --no-floppy --fs-uuid --set=root {{ BOOT_FS_UUID }}
+
+insmod part_gpt
+insmod fat
+
+{%- set id = ESP_FS_VOL_ID | int(base=16) -%}
+{%- set shift = 2 ** 16 -%}
+{%- set id_hi = id // shift -%}
+{%- set id_lo = id - (id_hi * shift) -%}
+{%- set id_fmt = '{:X}-{:X}'.format(id_hi, id_lo) -%}
+search --no-floppy --fs-uuid --set=boot {{ id_fmt }}
+
+function load_video {
+  insmod all_video
+}
+
+blscfg
