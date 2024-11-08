@@ -1,0 +1,10 @@
+RUN \
+    passwd -d root \
+    && \
+	dnf5 install -y \
+		kernel \
+		kernel-core \
+		kernel-modules \
+		systemd-networkd \
+		systemd-resolved \
+		vim-minimal

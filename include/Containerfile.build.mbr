@@ -1,0 +1,64 @@
+ARG BUILD_MBR_GRUB_BOOT_CONFIG_FILE="/grub2.boot.cfg"
+ARG BUILD_MBR_GRUB_BOOT_CONFIG_TEMPLATE="grub2.boot.cfg.j2"
+ARG BUILD_MBR_GRUB_ESP_CONFIG_FILE="/grub2.esp.cfg"
+ARG BUILD_MBR_GRUB_ESP_CONFIG_TEMPLATE="grub2.esp.cfg.j2"
+ARG BUILD_MBR_KERNEL_CMDLINE_FILE="/cmdline"
+ARG BUILD_MBR_KERNEL_CMDLINE_TEMPLATE="cmdline.j2"
+
+/*
+ * We should probably use an ARG for the stage name to avoid any mismatch with
+ * Containerfile.target.mbr. However, that's not supported in docker, and only
+ * supported in buildah since 1.37.
+ *
+ * See https://github.com/containers/buildah/pull/5641
+ *
+ * Ubuntu doesn't package buildah 1.37 yet, and only 25.04 will do. So the
+ * compatibility for both Github CI and end users seems like a big concern for
+ * now.
+ */
+FROM --platform=linux/${BUILDARCH} \
+    ${BUILD_CONTAINER_IMAGE}:${CONTAINER_VERSION} \
+    as build-mbr
+
+ARG BUILD_MBR_GRUB_BOOT_CONFIG_TEMPLATE
+COPY templates/mbr/${BUILD_MBR_GRUB_BOOT_CONFIG_TEMPLATE} /
+
+ARG BUILD_MBR_GRUB_ESP_CONFIG_TEMPLATE
+COPY templates/mbr/${BUILD_MBR_GRUB_ESP_CONFIG_TEMPLATE} /
+
+ARG BUILD_MBR_KERNEL_CMDLINE_TEMPLATE
+COPY templates/mbr/${BUILD_MBR_KERNEL_CMDLINE_TEMPLATE} /
+
+ARG BUILD_MBR_GRUB_BOOT_CONFIG_FILE
+ARG BUILD_MBR_GRUB_ESP_CONFIG_FILE
+ARG BUILD_MBR_KERNEL_CMDLINE_FILE
+ARG BUILD_MBR_PART_ESP_FS_VOL_ID
+ARG BUILD_MBR_PART_BOOT_FS_UUID
+ARG BUILD_MBR_PART_ROOT_FS_UUID
+
+RUN \
+	dnf5 install -y \
+		python3-pip \
+	&& \
+	pip install jinja2-cli \
+	&& \
+	jinja2 \
+		-D ESP_FS_VOL_ID="${BUILD_MBR_PART_ESP_FS_VOL_ID}" \
+		-D BOOT_FS_UUID="${BUILD_MBR_PART_BOOT_FS_UUID}" \
+		-D ROOT_FS_UUID="${BUILD_MBR_PART_ROOT_FS_UUID}" \
+		${BUILD_MBR_GRUB_BOOT_CONFIG_TEMPLATE} \
+		-o ${BUILD_MBR_GRUB_BOOT_CONFIG_FILE} \
+	&& \
+	jinja2 \
+		-D ESP_FS_VOL_ID="${BUILD_MBR_PART_ESP_FS_VOL_ID}" \
+		-D BOOT_FS_UUID="${BUILD_MBR_PART_BOOT_FS_UUID}" \
+		-D ROOT_FS_UUID="${BUILD_MBR_PART_ROOT_FS_UUID}" \
+		/${BUILD_MBR_GRUB_ESP_CONFIG_TEMPLATE} \
+		-o ${BUILD_MBR_GRUB_ESP_CONFIG_FILE} \
+	&& \
+	jinja2 \
+		-D ESP_FS_VOL_ID="${BUILD_MBR_PART_ESP_FS_VOL_ID}" \
+		-D BOOT_FS_UUID="${BUILD_MBR_PART_BOOT_FS_UUID}" \
+		-D ROOT_FS_UUID="${BUILD_MBR_PART_ROOT_FS_UUID}" \
+		${BUILD_MBR_KERNEL_CMDLINE_TEMPLATE} \
+		-o ${BUILD_MBR_KERNEL_CMDLINE_FILE}
