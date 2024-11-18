@@ -1,0 +1,47 @@
+name: Containers CI
+
+on:
+  pull_request:
+    branches:
+      - main
+
+  push:
+    branches:
+      - main
+
+  schedule:
+    - cron: "0 0 * * 1"
+
+jobs:
+  matrix:
+    name: Generate Test Matrix
+    runs-on: ubuntu-latest
+
+    outputs:
+      containers: ${{ steps.generate_containers.outputs.matrix }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          pip install python-slugify
+      - id: generate_containers
+        run: |
+          echo "matrix=$(./.github/workflows/build-matrix.py)" >> $GITHUB_OUTPUT
+
+  run:
+    name: ${{ matrix.containers.name }}
+    needs: matrix
+
+    permissions:
+      packages: write
+
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.matrix.outputs.containers) }}
+
+    uses: ./.github/workflows/build-container.yml
+    with:
+      name: ${{ matrix.containers.name }}
+      image_name: ${{ matrix.containers.image_name }}
+      containerfile: ${{ matrix.containers.path }}
+      qemu: ${{ matrix.containers.qemu }}
