@@ -23,6 +23,8 @@ RUN \
 	&& \
 	cp /usr/lib/systemd/boot/efi/systemd-bootaa64.efi /efi/EFI/BOOT/BOOTAA64.efi \
 	&& \
+	passwd -d root \
+	&& \
 	dnf5 install -y \
 		kernel \
 		kernel-core \

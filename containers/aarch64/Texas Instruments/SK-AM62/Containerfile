@@ -78,6 +78,8 @@ RUN \
 		shim-aa64 \
 		ti-uboot-images-armv8 \
 	&& \
+	passwd -d root \
+	&& \
 	dnf5 install -y \
 		kernel \
 		kernel-core \

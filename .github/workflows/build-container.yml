@@ -1,0 +1,162 @@
+on:
+  workflow_call:
+    inputs:
+      name:
+        required: true
+        type: string
+
+      image_name:
+        required: true
+        type: string
+
+      containerfile:
+        required: true
+        type: string
+
+      qemu:
+        type: string
+
+permissions:
+  packages: write
+
+env:
+  REGISTRY_URL: ghcr.io/${{ github.repository_owner }}
+  REGISTRY_USER: ${{ github.actor }}
+  REGISTRY_PASSWORD: ${{ github.token }}
+
+jobs:
+  build_container:
+    name: Build Container
+
+    # Buildah <= 1.24 doesn't parse --platform properly in FROM clauses:
+    #  https://github.com/containers/buildah/issues/3712
+    #
+    # This was fixed in Buildah 1.24.1, but Ubuntu 22.04 still packages
+    # buildah 1.23 so we need something newer.
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Install QEMU
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu-user-static
+
+      - uses: actions/checkout@v4
+
+      - name: Build Image
+        id: build_image
+        uses: redhat-actions/buildah-build@v2
+        with:
+          image: ${{ inputs.image_name }}
+          tags: ${{ github.sha }}
+          containerfiles: |
+            ${{ inputs.containerfile }}
+
+      - name: Create Image Archive
+        run: |
+          podman save -o ${{ inputs.image_name }}.tar localhost/${{ inputs.image_name }}:${{ github.sha }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.image_name }}.tar
+          path: ${{ inputs.image_name }}.tar
+
+    outputs:
+      container_archive: "${{ inputs.image_name }}.tar"
+
+  build_image:
+    name: Build Image
+    runs-on: ubuntu-latest
+    needs: build_container
+
+    steps:
+      - name: Create Variables
+        id: vars
+        run: |
+          SHORT_SHA="$(echo ${{ github.sha }} | cut -b -12)"
+          echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
+          IMAGE_NAME="${{ inputs.image_name }}-$SHORT_SHA"
+          echo "image_name=$IMAGE_NAME" >> $GITHUB_OUTPUT
+          IMAGE_FILE_NAME="$IMAGE_NAME.img"
+          echo "image_file_name=$IMAGE_FILE_NAME" >> $GITHUB_OUTPUT
+
+      - name: Install OCIBootstrap
+        uses: baptiste0928/cargo-install@v3
+        with:
+          crate: ocibootstrap
+          git: https://github.com/mripard/ocibootstrap
+          commit: b8daf0ec99e62db070065283700e848194052652
+
+      - name: Download Container Archive
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.build_container.outputs.container_archive }}
+
+      - name: Import Container
+        run: |
+          sudo podman load -i ${{ needs.build_container.outputs.container_archive }}
+
+      - name: Build Container Image
+        run: |
+          dd if=/dev/zero of=${{ steps.vars.outputs.image_file_name }} count=2 bs=1G
+          sudo RUST_LOG=trace $(which ocibootstrap) \
+            -a arm64 \
+            device \
+              localhost/${{ inputs.image_name }}:${{ github.sha }} \
+              ${{ steps.vars.outputs.image_file_name }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.vars.outputs.image_file_name }}
+          path: ${{ steps.vars.outputs.image_file_name }}
+
+    outputs:
+      container_image: ${{ steps.vars.outputs.image_file_name }}
+
+  test:
+    name: Boot Testing
+    runs-on: ubuntu-latest
+    needs: build_image
+    if: "${{ inputs.qemu != '' }}"
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install QEMU
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu-system-arm
+
+      - name: Download Container Archive
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.build_image.outputs.container_image }}
+
+      - name: Test Container Image
+        run: |
+          ./.github/workflows/boot-qemu-image.py \
+            "${{ inputs.qemu }}" \
+            ${{ needs.build_image.outputs.container_image }}
+
+  deploy:
+    name: Push Container to Registry
+    runs-on: ubuntu-latest
+    needs: [build_container, test]
+    if: ${{ !failure() && !cancelled() && github.event_name != 'pull_request' }}
+
+    steps:
+      - name: Download Container Archive
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.build_container.outputs.container_archive }}
+
+      - name: Import Container
+        run: |
+          podman load -i ${{ needs.build_container.outputs.container_archive }}
+
+      - uses: redhat-actions/push-to-registry@v2
+        with:
+          image: ${{ inputs.image_name }}
+          tags: latest ${{ github.sha }}
+          registry: ${{ env.REGISTRY_URL }}
+          username: ${{ env.REGISTRY_USER }}
+          password: ${{ env.REGISTRY_PASSWORD }}
