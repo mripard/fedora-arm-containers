@@ -152,6 +152,9 @@ jobs:
       - name: Import Container
         run: |
           podman load -i ${{ needs.build_container.outputs.container_archive }}
+          podman tag \
+            ${{ inputs.image_name }}:${{ github.sha }} \
+            ${{ inputs.image_name }}:latest
 
       - uses: redhat-actions/push-to-registry@v2
         with:
