@@ -1,4 +1,7 @@
-FROM --platform=linux/arm64 fedora-minimal:40
+#include "include/Containerfile.header"
+
+FROM --platform=linux/arm64 \
+    ${CONTAINER_IMAGE}:${CONTAINER_VERSION}
 
 LABEL com.github.mripard.ocibootstrap.partitions="[ \"esp\", \"root\" ]"
 LABEL com.github.mripard.ocibootstrap.partitions_layout="gpt"
@@ -7,7 +10,7 @@ LABEL com.github.mripard.ocibootstrap.partition.esp.flags.required="true"
 LABEL com.github.mripard.ocibootstrap.partition.esp.fs="fat"
 LABEL com.github.mripard.ocibootstrap.partition.esp.mount_point="/efi"
 LABEL com.github.mripard.ocibootstrap.partition.esp.partition_uuid="c12a7328-f81f-11d2-ba4b-00a0c93ec93b"
-LABEL com.github.mripard.ocibootstrap.partition.esp.size="512"
+LABEL com.github.mripard.ocibootstrap.partition.esp.size_mb="512"
 LABEL com.github.mripard.ocibootstrap.partition.root.fs="ext4"
 LABEL com.github.mripard.ocibootstrap.partition.root.mount_point="/"
 LABEL com.github.mripard.ocibootstrap.partition.root.partition_uuid="b921b045-1df0-41c3-af44-4c6f280d3fae"
@@ -21,18 +24,10 @@ RUN \
 		sdubby \
 		systemd-boot-unsigned \
 	&& \
-	cp /usr/lib/systemd/boot/efi/systemd-bootaa64.efi /efi/EFI/BOOT/BOOTAA64.efi \
-	&& \
-	passwd -d root \
-	&& \
-	dnf5 install -y \
-		kernel \
-		kernel-core \
-		kernel-modules \
-		systemd-networkd \
-		systemd-resolved \
-		vim-minimal \
-	&& \
-	sed -i 's|/efi/|/|' /efi/loader/entries/*.conf
+	cp /usr/lib/systemd/boot/efi/systemd-bootaa64.efi /efi/EFI/BOOT/BOOTAA64.efi
+
+#include "include/Containerfile.target.common"
+
+RUN [ "/bin/bash", "-c", "sed -i 's|/efi/|/|' /efi/loader/entries/*.conf" ]
 
 CMD ["/bin/sh"]

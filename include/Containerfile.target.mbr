@@ -1,0 +1,17 @@
+ARG BUILD_MBR_GRUB_BOOT_CONFIG_FILE
+ARG BUILD_MBR_GRUB_ESP_CONFIG_FILE
+ARG BUILD_MBR_KERNEL_CMDLINE_FILE
+
+COPY --from=build-mbr ${BUILD_MBR_KERNEL_CMDLINE_FILE} /etc/kernel/cmdline
+
+RUN \
+	dnf5 install -y \
+		grub2 \
+		shim-aa64
+
+#include "include/Containerfile.target.common"
+
+RUN [ "/bin/bash", "-c", "sed -i 's|/boot/|/|' /boot/loader/entries/*.conf" ]
+
+COPY --from=build-mbr ${BUILD_MBR_GRUB_BOOT_CONFIG_FILE} /boot/grub2/grub.cfg
+COPY --from=build-mbr ${BUILD_MBR_GRUB_ESP_CONFIG_FILE} /boot/efi/EFI/fedora/grub.cfg
