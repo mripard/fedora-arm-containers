@@ -2,6 +2,7 @@ RUN \
     passwd -d root \
     && \
 	dnf5 install -y \
+		e2fsprogs \
 		kernel \
 		kernel-core \
 		kernel-modules \
