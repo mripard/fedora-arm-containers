@@ -15,6 +15,7 @@ LABEL com.github.mripard.ocibootstrap.partition.root.fs="ext4"
 LABEL com.github.mripard.ocibootstrap.partition.root.mount_point="/"
 LABEL com.github.mripard.ocibootstrap.partition.root.partition_uuid="b921b045-1df0-41c3-af44-4c6f280d3fae"
 
+COPY overlays/common/gpt/ /
 COPY overlays/systemready-ir /
 
 RUN \
