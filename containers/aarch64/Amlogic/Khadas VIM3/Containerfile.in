@@ -79,7 +79,7 @@ LABEL com.github.mripard.ocibootstrap.partition.root.ext4.uuid="$BUILD_MBR_PART_
 LABEL com.github.mripard.ocibootstrap.partition.root.mount_point="/"
 LABEL com.github.mripard.ocibootstrap.partition.root.type="0x83"
 
-COPY overlays/khadas-vim3 /
+COPY overlays/aarch64/amlogic/khadas-vim3/ /
 
 #include "include/Containerfile.target.mbr"
 

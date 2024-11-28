@@ -46,7 +46,7 @@ LABEL com.github.mripard.ocibootstrap.partition.root.ext4.uuid="$BUILD_MBR_PART_
 LABEL com.github.mripard.ocibootstrap.partition.root.mount_point="/"
 LABEL com.github.mripard.ocibootstrap.partition.root.type="0x83"
 
-COPY overlays/ti-sk-am62 /
+COPY overlays/aarch64/ti/sk-am62/ /
 
 #include "include/Containerfile.target.mbr"
 
