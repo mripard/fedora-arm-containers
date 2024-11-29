@@ -79,6 +79,7 @@ LABEL com.github.mripard.ocibootstrap.partition.root.ext4.uuid="$BUILD_MBR_PART_
 LABEL com.github.mripard.ocibootstrap.partition.root.mount_point="/"
 LABEL com.github.mripard.ocibootstrap.partition.root.type="0x83"
 
+COPY overlays/common/mbr/ /
 COPY overlays/aarch64/amlogic/a311d/ /
 
 #include "include/Containerfile.target.mbr"
