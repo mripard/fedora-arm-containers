@@ -26,8 +26,8 @@ ARG BUILD_MBR_PART_ESP_FS_VOL_ID
 ARG BUILD_MBR_PART_BOOT_FS_UUID
 ARG BUILD_MBR_PART_ROOT_FS_UUID
 
-LABEL com.github.mripard.ocibootstrap.partitions="[ \"esp\", \"boot\", \"root\" ]"
-LABEL com.github.mripard.ocibootstrap.partitions_layout="mbr"
+LABEL com.github.mripard.ocibootstrap.table.partitions="[ \"esp\", \"boot\", \"root\" ]"
+LABEL com.github.mripard.ocibootstrap.table.type="mbr"
 LABEL com.github.mripard.ocibootstrap.partition.esp.flags.bootable="true"
 LABEL com.github.mripard.ocibootstrap.partition.esp.fs="fat"
 LABEL com.github.mripard.ocibootstrap.partition.esp.fat.heads="64"
@@ -46,7 +46,8 @@ LABEL com.github.mripard.ocibootstrap.partition.root.ext4.uuid="$BUILD_MBR_PART_
 LABEL com.github.mripard.ocibootstrap.partition.root.mount_point="/"
 LABEL com.github.mripard.ocibootstrap.partition.root.type="0x83"
 
-COPY overlays/aarch64/ti/sk-am62/ /
+COPY overlays/common/mbr/ /
+COPY overlays/aarch64/ti/am625/ /
 
 #include "include/Containerfile.target.mbr"
 

@@ -1,0 +1,113 @@
+#include "include/Containerfile.header"
+
+FROM --platform=linux/${BUILDARCH} \
+    ${BUILD_CONTAINER_IMAGE}:${CONTAINER_VERSION} \
+    as build-uboot
+
+ARG UBOOT_VERSION=2024.10
+
+ENV CROSS_COMPILE=aarch64-linux-gnu-
+
+RUN \
+	dnf5 install -y \
+		bc \
+		bison \
+		bzip2 \
+		dtc \
+		flex \
+		gcc \
+		gcc-aarch64-linux-gnu \
+		git \
+		gnutls-devel \
+		libuuid-devel \
+		make \
+		ncurses-devel \
+		openssl-devel \
+		openssl-devel-engine \
+		perl-interpreter \
+		python3-devel \
+		python3-libfdt \
+		python3-pyelftools \
+		python3-setuptools \
+		swig \
+		tar \
+		wget \
+	&& \
+	git clone https://gitlab.collabora.com/hardware-enablement/rockchip-3588/rkbin.git \
+	&& \
+	git clone https://gitlab.collabora.com/hardware-enablement/rockchip-3588/trusted-firmware-a -b rk3588 \
+	&& \
+	pushd trusted-firmware-a \
+	&& \
+	make \
+		PLAT=rk3588 \
+		bl31 \
+	&& \
+	popd \
+	&& \
+	wget https://ftp.denx.de/pub/u-boot/u-boot-${UBOOT_VERSION}.tar.bz2 \
+	&& \
+	tar xvf ./u-boot-${UBOOT_VERSION}.tar.bz2 \
+	&& \
+	pushd u-boot-${UBOOT_VERSION} \
+	&& \
+	make rock5b-rk3588_defconfig \
+	&& \
+	ROCKCHIP_TPL=../rkbin/bin/rk35/rk3588_ddr_lp4_2112MHz_lp5_2736MHz_v1.08.bin \
+	   BL31=../trusted-firmware-a/build/rk3588/release/bl31/bl31.elf \
+	       make \
+				-j $(nproc) \
+	&& \
+	popd \
+	&& \
+    cp u-boot-${UBOOT_VERSION}/idbloader.img ./ \
+    && \
+    cp u-boot-${UBOOT_VERSION}/u-boot.itb ./
+
+FROM --platform=linux/arm64 \
+    ${CONTAINER_IMAGE}:${CONTAINER_VERSION}
+
+LABEL com.github.mripard.ocibootstrap.table.partitions="[ \"loader1\", \"loader2\", \"esp\", \"root\" ]"
+LABEL com.github.mripard.ocibootstrap.table.type="gpt"
+LABEL com.github.mripard.ocibootstrap.partition.loader1.fs="raw"
+LABEL com.github.mripard.ocibootstrap.partition.loader1.raw.content="/idbloader.img"
+LABEL com.github.mripard.ocibootstrap.partition.loader1.size_mb="4"
+LABEL com.github.mripard.ocibootstrap.partition.loader1.offset_lba="64"
+LABEL com.github.mripard.ocibootstrap.partition.loader1.flags.required="true"
+LABEL com.github.mripard.ocibootstrap.partition.loader1.partition_uuid="8da63339-0007-60c0-c436-083ac8230908"
+LABEL com.github.mripard.ocibootstrap.partition.loader2.fs="raw"
+LABEL com.github.mripard.ocibootstrap.partition.loader2.raw.content="/u-boot.itb"
+LABEL com.github.mripard.ocibootstrap.partition.loader2.size_mb="4"
+LABEL com.github.mripard.ocibootstrap.partition.loader2.offset_lba="16384"
+LABEL com.github.mripard.ocibootstrap.partition.loader2.flags.required="true"
+LABEL com.github.mripard.ocibootstrap.partition.loader2.partition_uuid="8da63339-0007-60c0-c436-083ac8230908"
+LABEL com.github.mripard.ocibootstrap.partition.esp.flags.bootable="true"
+LABEL com.github.mripard.ocibootstrap.partition.esp.flags.required="true"
+LABEL com.github.mripard.ocibootstrap.partition.esp.fs="fat"
+LABEL com.github.mripard.ocibootstrap.partition.esp.mount_point="/efi"
+LABEL com.github.mripard.ocibootstrap.partition.esp.partition_uuid="c12a7328-f81f-11d2-ba4b-00a0c93ec93b"
+LABEL com.github.mripard.ocibootstrap.partition.esp.size_mb="512"
+LABEL com.github.mripard.ocibootstrap.partition.root.fs="ext4"
+LABEL com.github.mripard.ocibootstrap.partition.root.mount_point="/"
+LABEL com.github.mripard.ocibootstrap.partition.root.partition_uuid="b921b045-1df0-41c3-af44-4c6f280d3fae"
+
+COPY overlays/common/gpt/ /
+COPY overlays/aarch64/rockchip/rk3588/ /
+
+RUN \
+	mkdir -p /efi/EFI/BOOT/ \
+	&& \
+	dnf5 install -y \
+		sdubby \
+		systemd-boot-unsigned \
+	&& \
+	cp /usr/lib/systemd/boot/efi/systemd-bootaa64.efi /efi/EFI/BOOT/BOOTAA64.efi
+
+#include "include/Containerfile.target.common"
+
+RUN [ "/bin/bash", "-c", "sed -i 's|/efi/|/|' /efi/loader/entries/*.conf" ]
+
+COPY --from=build-uboot /idbloader.img /
+COPY --from=build-uboot /u-boot.itb /
+
+CMD ["/bin/sh"]
