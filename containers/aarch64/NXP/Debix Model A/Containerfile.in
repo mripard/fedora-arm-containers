@@ -99,18 +99,7 @@ LABEL com.github.mripard.ocibootstrap.partition.root.partition_uuid="b921b045-1d
 COPY overlays/common/gpt/ /
 COPY overlays/aarch64/nxp/imx8mp/ /
 
-RUN \
-	mkdir -p /efi/EFI/BOOT/ \
-	&& \
-	dnf5 install -y \
-		sdubby \
-		systemd-boot-unsigned \
-	&& \
-	cp /usr/lib/systemd/boot/efi/systemd-bootaa64.efi /efi/EFI/BOOT/BOOTAA64.efi
-
-#include "include/Containerfile.target.common"
-
-RUN [ "/bin/bash", "-c", "sed -i 's|/efi/|/|' /efi/loader/entries/*.conf" ]
+#include "include/Containerfile.target.gpt"
 
 COPY --from=build-uboot /build/flash.bin /flash.bin
 
