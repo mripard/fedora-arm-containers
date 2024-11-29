@@ -85,7 +85,7 @@ jobs:
         with:
           crate: ocibootstrap
           git: https://github.com/mripard/ocibootstrap
-          commit: e3459aa10558a710a9ac407dc2838bf63546918a
+          commit: 39cbcc00975178bc53d61e69e8018dbe2e1b28f0
 
       - name: Download Container Archive
         uses: actions/download-artifact@v4

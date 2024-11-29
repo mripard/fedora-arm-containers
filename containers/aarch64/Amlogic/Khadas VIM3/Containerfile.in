@@ -56,8 +56,8 @@ ARG BUILD_MBR_PART_ESP_FS_VOL_ID
 ARG BUILD_MBR_PART_BOOT_FS_UUID
 ARG BUILD_MBR_PART_ROOT_FS_UUID
 
-LABEL com.github.mripard.ocibootstrap.partitions="[ \"loader\", \"esp\", \"boot\", \"root\" ]"
-LABEL com.github.mripard.ocibootstrap.partitions_layout="mbr"
+LABEL com.github.mripard.ocibootstrap.table.partitions="[ \"loader\", \"esp\", \"boot\", \"root\" ]"
+LABEL com.github.mripard.ocibootstrap.table.type="mbr"
 LABEL com.github.mripard.ocibootstrap.partition.loader.fs="raw"
 LABEL com.github.mripard.ocibootstrap.partition.loader.raw.content="/u-boot.bin"
 LABEL com.github.mripard.ocibootstrap.partition.loader.size_mb="2"

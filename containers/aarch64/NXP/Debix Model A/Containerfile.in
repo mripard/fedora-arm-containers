@@ -78,8 +78,8 @@ RUN \
 FROM --platform=linux/arm64 \
     ${CONTAINER_IMAGE}:${CONTAINER_VERSION}
 
-LABEL com.github.mripard.ocibootstrap.partitions="[ \"loader\", \"esp\", \"root\" ]"
-LABEL com.github.mripard.ocibootstrap.partitions_layout="gpt"
+LABEL com.github.mripard.ocibootstrap.table.partitions="[ \"loader\", \"esp\", \"root\" ]"
+LABEL com.github.mripard.ocibootstrap.table.type="gpt"
 LABEL com.github.mripard.ocibootstrap.partition.loader.fs="raw"
 LABEL com.github.mripard.ocibootstrap.partition.loader.raw.content="/flash.bin"
 LABEL com.github.mripard.ocibootstrap.partition.loader.size_mb="2"

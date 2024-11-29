@@ -3,8 +3,8 @@
 FROM --platform=linux/arm64 \
     ${CONTAINER_IMAGE}:${CONTAINER_VERSION}
 
-LABEL com.github.mripard.ocibootstrap.partitions="[ \"esp\", \"root\" ]"
-LABEL com.github.mripard.ocibootstrap.partitions_layout="gpt"
+LABEL com.github.mripard.ocibootstrap.table.partitions="[ \"esp\", \"root\" ]"
+LABEL com.github.mripard.ocibootstrap.table.type="gpt"
 LABEL com.github.mripard.ocibootstrap.partition.esp.flags.bootable="true"
 LABEL com.github.mripard.ocibootstrap.partition.esp.flags.required="true"
 LABEL com.github.mripard.ocibootstrap.partition.esp.fs="fat"
