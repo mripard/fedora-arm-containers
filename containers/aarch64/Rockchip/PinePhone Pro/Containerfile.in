@@ -1,0 +1,57 @@
+#include "include/Containerfile.header"
+
+FROM --platform=linux/${BUILDARCH} \
+    ${BUILD_CONTAINER_IMAGE}:${CONTAINER_VERSION} \
+    as build-uboot
+
+RUN \
+	dnf5 install -y \
+		uboot-images-armv8
+
+FROM --platform=linux/arm64 \
+    ${CONTAINER_IMAGE}:${CONTAINER_VERSION}
+
+LABEL com.github.mripard.ocibootstrap.table.partitions="[ \"loader1\", \"loader2\", \"esp\", \"root\" ]"
+LABEL com.github.mripard.ocibootstrap.table.type="gpt"
+LABEL com.github.mripard.ocibootstrap.partition.loader1.fs="raw"
+LABEL com.github.mripard.ocibootstrap.partition.loader1.raw.content="/idbloader.img"
+LABEL com.github.mripard.ocibootstrap.partition.loader1.size_mb="4"
+LABEL com.github.mripard.ocibootstrap.partition.loader1.offset_lba="64"
+LABEL com.github.mripard.ocibootstrap.partition.loader1.flags.required="true"
+LABEL com.github.mripard.ocibootstrap.partition.loader1.partition_uuid="8da63339-0007-60c0-c436-083ac8230908"
+LABEL com.github.mripard.ocibootstrap.partition.loader2.fs="raw"
+LABEL com.github.mripard.ocibootstrap.partition.loader2.raw.content="/u-boot.itb"
+LABEL com.github.mripard.ocibootstrap.partition.loader2.size_mb="4"
+LABEL com.github.mripard.ocibootstrap.partition.loader2.offset_lba="16384"
+LABEL com.github.mripard.ocibootstrap.partition.loader2.flags.required="true"
+LABEL com.github.mripard.ocibootstrap.partition.loader2.partition_uuid="8da63339-0007-60c0-c436-083ac8230908"
+LABEL com.github.mripard.ocibootstrap.partition.esp.flags.bootable="true"
+LABEL com.github.mripard.ocibootstrap.partition.esp.flags.required="true"
+LABEL com.github.mripard.ocibootstrap.partition.esp.fs="fat"
+LABEL com.github.mripard.ocibootstrap.partition.esp.mount_point="/efi"
+LABEL com.github.mripard.ocibootstrap.partition.esp.partition_uuid="c12a7328-f81f-11d2-ba4b-00a0c93ec93b"
+LABEL com.github.mripard.ocibootstrap.partition.esp.size_mb="512"
+LABEL com.github.mripard.ocibootstrap.partition.root.fs="ext4"
+LABEL com.github.mripard.ocibootstrap.partition.root.mount_point="/"
+LABEL com.github.mripard.ocibootstrap.partition.root.partition_uuid="b921b045-1df0-41c3-af44-4c6f280d3fae"
+
+COPY overlays/common/gpt/ /
+COPY overlays/aarch64/rockchip/rk3399/ /
+
+RUN \
+	mkdir -p /efi/EFI/BOOT/ \
+	&& \
+	dnf5 install -y \
+		sdubby \
+		systemd-boot-unsigned \
+	&& \
+	cp /usr/lib/systemd/boot/efi/systemd-bootaa64.efi /efi/EFI/BOOT/BOOTAA64.efi
+
+#include "include/Containerfile.target.common"
+
+RUN [ "/bin/bash", "-c", "sed -i 's|/efi/|/|' /efi/loader/entries/*.conf" ]
+
+COPY --from=build-uboot /usr/share/uboot/pinephone-pro-rk3399/idbloader.img /
+COPY --from=build-uboot /usr/share/uboot/pinephone-pro-rk3399/u-boot.itb /
+
+CMD ["/bin/sh"]
