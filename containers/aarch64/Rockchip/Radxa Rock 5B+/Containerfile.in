@@ -6,8 +6,6 @@ FROM --platform=linux/${BUILDARCH} \
 
 ARG UBOOT_VERSION=2024.10
 
-ENV CROSS_COMPILE=aarch64-linux-gnu-
-
 RUN \
 	dnf5 install -y \
 		bc \
@@ -16,7 +14,6 @@ RUN \
 		dtc \
 		flex \
 		gcc \
-		gcc-aarch64-linux-gnu \
 		git \
 		gnutls-devel \
 		libuuid-devel \
@@ -40,6 +37,8 @@ RUN \
 	pushd trusted-firmware-a \
 	&& \
 	make \
+		CC=gcc \
+		HOSTCC=gcc \
 		PLAT=rk3588 \
 		bl31 \
 	&& \
@@ -47,7 +46,7 @@ RUN \
 	&& \
 	wget https://ftp.denx.de/pub/u-boot/u-boot-${UBOOT_VERSION}.tar.bz2 \
 	&& \
-	tar xvf ./u-boot-${UBOOT_VERSION}.tar.bz2 \
+	tar xf ./u-boot-${UBOOT_VERSION}.tar.bz2 \
 	&& \
 	pushd u-boot-${UBOOT_VERSION} \
 	&& \

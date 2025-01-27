@@ -10,8 +10,6 @@ FROM --platform=linux/${BUILDARCH} \
     ${BUILD_CONTAINER_IMAGE}:${CONTAINER_VERSION} \
     as build-uboot
 
-ENV CROSS_COMPILE=aarch64-linux-gnu-
-
 RUN \
 	dnf5 install -y \
 		bc \
@@ -19,13 +17,13 @@ RUN \
 		dtc \
 		flex \
 		gcc \
-		gcc-aarch64-linux-gnu \
 		git \
 		gnutls-devel \
 		libuuid-devel \
 		make \
 		openssl-devel \
 		openssl-devel-engine \
+		qemu \
 	&& \
 	git clone https://source.denx.de/u-boot/u-boot.git \
 	&& \
