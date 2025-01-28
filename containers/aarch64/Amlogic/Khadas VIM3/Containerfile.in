@@ -10,6 +10,8 @@ FROM --platform=linux/${BUILDARCH} \
     ${BUILD_CONTAINER_IMAGE}:${CONTAINER_VERSION} \
     as build-uboot
 
+ARG UBOOT_VERSION
+
 RUN \
 	dnf5 install -y \
 		bc \
@@ -37,7 +39,7 @@ RUN \
 	&& \
 	pushd u-boot \
 	&& \
-	git checkout v2024.10 \
+	git checkout v${UBOOT_VERSION} \
 	&& \
 	git cherry-pick --no-commit b52364b942ff \
 	&& \
