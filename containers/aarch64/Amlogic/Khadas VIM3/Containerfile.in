@@ -14,6 +14,7 @@ RUN \
 	dnf5 install -y \
 		bc \
 		bison \
+		bzip2 \
 		dtc \
 		flex \
 		gcc \
@@ -21,9 +22,16 @@ RUN \
 		gnutls-devel \
 		libuuid-devel \
 		make \
+		ncurses-devel \
 		openssl-devel \
 		openssl-devel-engine \
+		perl-interpreter \
+		python3-devel \
+		python3-libfdt \
+		python3-pyelftools \
+		python3-setuptools \
 		qemu \
+		swig \
 	&& \
 	git clone https://source.denx.de/u-boot/u-boot.git \
 	&& \
