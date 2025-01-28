@@ -4,7 +4,7 @@ FROM --platform=linux/${BUILDARCH} \
     ${BUILD_CONTAINER_IMAGE}:${CONTAINER_VERSION} \
     as build-uboot
 
-ARG UBOOT_VERSION=2024.10
+ARG UBOOT_VERSION
 
 RUN \
 	dnf5 install -y \

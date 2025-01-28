@@ -10,10 +10,13 @@ FROM --platform=linux/${BUILDARCH} \
     ${BUILD_CONTAINER_IMAGE}:${CONTAINER_VERSION} \
     as build-uboot
 
+ARG UBOOT_VERSION
+
 RUN \
 	dnf5 install -y \
 		bc \
 		bison \
+		bzip2 \
 		dtc \
 		flex \
 		gcc \
@@ -21,17 +24,24 @@ RUN \
 		gnutls-devel \
 		libuuid-devel \
 		make \
+		ncurses-devel \
 		openssl-devel \
 		openssl-devel-engine \
+		perl-interpreter \
+		python3-devel \
+		python3-libfdt \
+		python3-pyelftools \
+		python3-setuptools \
 		qemu \
+		swig \
+		tar \
+		wget \
 	&& \
-	git clone https://source.denx.de/u-boot/u-boot.git \
+	wget https://ftp.denx.de/pub/u-boot/u-boot-${UBOOT_VERSION}.tar.bz2 \
 	&& \
-	pushd u-boot \
+	tar xf ./u-boot-${UBOOT_VERSION}.tar.bz2 \
 	&& \
-	git checkout v2024.10 \
-	&& \
-	git cherry-pick --no-commit b52364b942ff \
+	pushd u-boot-${UBOOT_VERSION} \
 	&& \
 	make khadas-vim3_defconfig \
 	&& \
@@ -45,7 +55,7 @@ RUN \
 	&& \
 	mkdir out \
 	&& \
-	./build-fip.sh khadas-vim3 ../u-boot/u-boot.bin out
+	./build-fip.sh khadas-vim3 ../u-boot-${UBOOT_VERSION}/u-boot.bin out
 
 FROM --platform=linux/arm64 \
     ${CONTAINER_IMAGE}:${CONTAINER_VERSION}
