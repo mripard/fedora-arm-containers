@@ -1,9 +1,5 @@
 #include "include/Containerfile.header"
 
-ARG BUILD_MBR_PART_ESP_FS_VOL_ID="cbe82c91"
-ARG BUILD_MBR_PART_BOOT_FS_UUID="51694d0d-69ba-4fbe-b3fb-cb03d4fa0eab"
-ARG BUILD_MBR_PART_ROOT_FS_UUID="a69a423d-ad2e-4925-8d77-c4e27980fdb4"
-
 ARG BUILD_DIR_R5=/build/r5/
 ARG BUILD_DIR_A53=/build/a53/
 
@@ -128,32 +124,8 @@ RUN \
 FROM --platform=linux/arm64 \
     ${CONTAINER_IMAGE}:${CONTAINER_VERSION}
 
-ARG BUILD_MBR_PART_ESP_FS_VOL_ID
-ARG BUILD_MBR_PART_BOOT_FS_UUID
-ARG BUILD_MBR_PART_ROOT_FS_UUID
-
 ARG BUILD_DIR_A53
 ARG BUILD_DIR_R5
-
-LABEL com.github.mripard.ocibootstrap.table.partitions="[ \"esp\", \"boot\", \"root\" ]"
-LABEL com.github.mripard.ocibootstrap.table.type="mbr"
-LABEL com.github.mripard.ocibootstrap.partition.esp.flags.bootable="true"
-LABEL com.github.mripard.ocibootstrap.partition.esp.fs="fat"
-LABEL com.github.mripard.ocibootstrap.partition.esp.fat.heads="64"
-LABEL com.github.mripard.ocibootstrap.partition.esp.fat.sectors_per_track="32"
-LABEL com.github.mripard.ocibootstrap.partition.esp.fat.vol_id="$BUILD_MBR_PART_ESP_FS_VOL_ID"
-LABEL com.github.mripard.ocibootstrap.partition.esp.mount_point="/boot/efi"
-LABEL com.github.mripard.ocibootstrap.partition.esp.size_mb="256"
-LABEL com.github.mripard.ocibootstrap.partition.esp.type="0x0c"
-LABEL com.github.mripard.ocibootstrap.partition.boot.fs="ext4"
-LABEL com.github.mripard.ocibootstrap.partition.boot.ext4.uuid="$BUILD_MBR_PART_BOOT_FS_UUID"
-LABEL com.github.mripard.ocibootstrap.partition.boot.mount_point="/boot"
-LABEL com.github.mripard.ocibootstrap.partition.boot.size_mb="256"
-LABEL com.github.mripard.ocibootstrap.partition.boot.type="0x83"
-LABEL com.github.mripard.ocibootstrap.partition.root.fs="ext4"
-LABEL com.github.mripard.ocibootstrap.partition.root.ext4.uuid="$BUILD_MBR_PART_ROOT_FS_UUID"
-LABEL com.github.mripard.ocibootstrap.partition.root.mount_point="/"
-LABEL com.github.mripard.ocibootstrap.partition.root.type="0x83"
 
 COPY overlays/common/mbr/ /
 COPY overlays/aarch64/ti/am625/ /

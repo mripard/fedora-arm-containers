@@ -1,0 +1,19 @@
+{
+  "esp": {
+    "fat": {
+      "volume_id": "cbe82c91",
+      "heads": 64,
+      "sectors_per_track": 32
+    }
+  },
+  "boot": {
+    "ext4": {
+      "uuid": "51694d0d-69ba-4fbe-b3fb-cb03d4fa0eab"
+    }
+  },
+  "root": {
+    "ext4": {
+      "uuid": "a69a423d-ad2e-4925-8d77-c4e27980fdb4"
+    }
+  }
+}
