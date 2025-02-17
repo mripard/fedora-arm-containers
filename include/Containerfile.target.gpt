@@ -9,4 +9,7 @@ RUN \
 
 #include "include/Containerfile.target.common"
 
+RUN \
+	rm -f /efi/loader/random-seed
+
 RUN [ "/bin/bash", "-c", "sed -i 's|/efi/|/|' /efi/loader/entries/*.conf" ]

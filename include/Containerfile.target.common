@@ -1,4 +1,6 @@
 RUN \
+    echo "uninitialized" > /etc/machine-id \
+    && \
     passwd -d root \
     && \
 	dnf5 install -y \
@@ -8,4 +10,9 @@ RUN \
 		kernel-modules \
 		systemd-networkd \
 		systemd-resolved \
-		vim-minimal
+		vim-minimal \
+	&& \
+    rm -f \
+        /etc/machine-info \
+        /var/lib/systemd/random-seed \
+        /var/lib/systemd/credential.secret

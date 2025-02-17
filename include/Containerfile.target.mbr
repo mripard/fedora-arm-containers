@@ -11,6 +11,9 @@ RUN \
 
 #include "include/Containerfile.target.common"
 
+RUN \
+	rm -f /boot/loader/random-seed
+
 RUN [ "/bin/bash", "-c", "sed -i 's|/boot/|/|' /boot/loader/entries/*.conf" ]
 
 COPY --from=build-mbr ${BUILD_MBR_GRUB_BOOT_CONFIG_FILE} /boot/grub2/grub.cfg
