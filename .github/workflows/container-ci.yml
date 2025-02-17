@@ -42,6 +42,7 @@ jobs:
     uses: ./.github/workflows/build-container.yml
     with:
       name: ${{ matrix.containers.name }}
+      board_dir: ${{ matrix.containers.dir }}
       image_name: ${{ matrix.containers.image_name }}
       containerfile: ${{ matrix.containers.path }}
       qemu: ${{ matrix.containers.qemu }}

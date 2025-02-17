@@ -26,6 +26,7 @@ def main():
                         "name": "{} {}".format(vendor, board),
                         "image_name": image_name,
                         "path": os.path.join(board_path, file),
+                        "dir": board_path,
                     }
 
                     test_file = os.path.join('./tests', arch, vendor, board, 'start-qemu.sh')
