@@ -52,6 +52,17 @@ def main():
         sys.exit(1)
 
     try:
+        child.expect(["Please enter user name to create (empty to skip):"], timeout=300)
+    except pexpect.EOF as e:
+        print("Cannot connect to shell.")
+        sys.exit(1)
+    except pexpect.TIMEOUT:
+        print("System did not boot in time, exiting.")
+        sys.exit(1)
+
+    child.sendline("")
+
+    try:
         child.expect(["[0-9a-f]{12} login:"], timeout=300)
     except pexpect.EOF as e:
         print("Cannot connect to shell.")
