@@ -1,0 +1,25 @@
+{
+  "loaders": [
+    {
+      "name": "loader",
+      "file": "/u-boot.bin",
+      "size_mb": 2,
+      "offset_lba": 1
+    }
+  ],
+  "esp": {
+    "fat": {
+      "volume_id": "fa69a3da"
+    }
+  },
+  "boot": {
+    "ext4": {
+      "uuid": "8eaab04b-e45e-479a-b1fc-e279146db775"
+    }
+  },
+  "root": {
+    "ext4": {
+      "uuid": "ea3cd769-1ace-4cbb-bce2-1bb7551b16dc"
+    }
+  }
+}
