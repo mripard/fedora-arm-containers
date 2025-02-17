@@ -9,6 +9,10 @@ on:
         required: true
         type: string
 
+      board_dir:
+        required: true
+        type: string
+
       containerfile:
         required: true
         type: string
