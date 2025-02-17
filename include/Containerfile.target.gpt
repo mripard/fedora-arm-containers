@@ -1,0 +1,15 @@
+RUN \
+	mkdir -p /efi/EFI/BOOT/ \
+	&& \
+	dnf5 install -y \
+		sdubby \
+		systemd-boot-unsigned \
+	&& \
+	cp /usr/lib/systemd/boot/efi/systemd-bootaa64.efi /efi/EFI/BOOT/BOOTAA64.efi
+
+#include "include/Containerfile.target.common"
+
+RUN \
+	rm -f /efi/loader/random-seed
+
+RUN [ "/bin/bash", "-c", "sed -i 's|/efi/|/|' /efi/loader/entries/*.conf" ]
