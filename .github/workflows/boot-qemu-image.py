@@ -32,7 +32,7 @@ def main():
     time.sleep(1)
 
     try:
-        child.expect(["[0-9a-f]{12} login:"], timeout=300)
+        child.expect(["systemd\[\d\]: Detected first boot."], timeout=300)
     except pexpect.EOF as e:
         # Some emulations require a fork of qemu-system, which may be
         # missing on the system, and is not provided by Buildroot.
@@ -46,6 +46,15 @@ def main():
             print('qemu-start.sh could not find the qemu binary')
             sys.exit(0)
         print("Connection problem, exiting.")
+        sys.exit(1)
+    except pexpect.TIMEOUT:
+        print("System did not boot in time, exiting.")
+        sys.exit(1)
+
+    try:
+        child.expect(["[0-9a-f]{12} login:"], timeout=300)
+    except pexpect.EOF as e:
+        print("Cannot connect to shell.")
         sys.exit(1)
     except pexpect.TIMEOUT:
         print("System did not boot in time, exiting.")
