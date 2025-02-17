@@ -1,0 +1,51 @@
+{
+  "type": "mbr",
+  "partitions": [
+    {% for loader in loaders %}
+    {
+      "type": {{ 0xf8 | int(base=16) }},
+      {%- if loader.offset_lba is defined %}
+      "offset_lba": {{ loader.offset_lba }},
+      {%- endif %}
+      "size_bytes": {{ loader.size_mb * 1024 * 1024 }},
+      "fs": {
+        "type": "raw",
+        "content": "{{ loader.file }}"
+      }
+    },
+    {% endfor -%}
+    {
+      "type": {{ 0x0c | int(base=16) }},
+      "size_bytes": {{ 256 * 1024 * 1024 }},
+      "mnt": "/boot/efi",
+      "bootable": true,
+      "fs": {
+        "type": "fat",
+        {% if esp.fat.heads is defined %}
+        "heads": {{ esp.fat.heads }},
+        {% endif %}
+        {% if esp.fat.sectors_per_track is defined %}
+        "sectors-per-track": {{ esp.fat.sectors_per_track }},
+        {% endif %}
+        "volume-id": {{ esp.fat.volume_id | int(base=16) }}
+      }
+    },
+    {
+      "type": {{ 0x83 | int(base=16) }},
+      "size_bytes": {{ 256 * 1024 * 1024 }},
+      "mnt": "/boot",
+      "fs": {
+          "type": "ext4",
+          "uuid": "{{ boot.ext4.uuid }}"
+      }
+    },
+    {
+      "type": {{ 0x83 | int(base=16) }},
+      "mnt": "/",
+      "fs": {
+          "type": "ext4",
+          "uuid": "{{ root.ext4.uuid }}"
+      }
+    }
+  ]
+}
