@@ -5,6 +5,7 @@ RUN \
     && \
 	dnf5 install -y \
 		e2fsprogs \
+		iputils \
 		kernel \
 		kernel-core \
 		kernel-modules \

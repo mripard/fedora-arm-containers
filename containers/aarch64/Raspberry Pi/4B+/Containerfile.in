@@ -1,6 +1,14 @@
 #include "include/Containerfile.header"
 
 FROM --platform=linux/arm64 \
+    ${BUILD_CONTAINER_IMAGE}:${CONTAINER_VERSION} \
+    as build-uboot
+
+RUN \
+	dnf5 install -y \
+		uboot-images-armv8
+
+FROM --platform=linux/arm64 \
     ${CONTAINER_IMAGE}:${CONTAINER_VERSION}
 
 LABEL com.github.mripard.ocibootstrap.table.partitions="[ \"esp\", \"root\" ]"
@@ -16,8 +24,14 @@ LABEL com.github.mripard.ocibootstrap.partition.root.mount_point="/"
 LABEL com.github.mripard.ocibootstrap.partition.root.partition_uuid="b921b045-1df0-41c3-af44-4c6f280d3fae"
 
 COPY overlays/common/gpt/ /
-COPY overlays/aarch64/arm/systemready-ir /
+COPY overlays/aarch64/raspberrypi/4b/ /
 
 #include "include/Containerfile.target.gpt"
+
+RUN \
+	dnf5 install -y \
+		bcm2711-firmware
+
+COPY --from=build-uboot /usr/share/uboot/rpi_arm64/u-boot.bin /boot/efi/rpi-u-boot.bin
 
 CMD ["/bin/sh"]
