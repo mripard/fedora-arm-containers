@@ -10,7 +10,7 @@ ARG BUILD_DIR_A53=/build/a53/
 #include "include/Containerfile.build.mbr"
 
 FROM --platform=linux/${BUILDARCH} \
-    ${BUILD_CONTAINER_IMAGE}:40 \
+    ${BUILD_CONTAINER_IMAGE}:${CONTAINER_VERSION} \
     as build-uboot
 
 ARG AARCH32_CROSS_COMPILE=arm-linux-gnu-
