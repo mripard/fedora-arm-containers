@@ -9,7 +9,7 @@ ARG BUILD_DIR_A53=/build/a53/
 
 #include "include/Containerfile.build.mbr"
 
-FROM --platform=linux/arm64 \
+FROM --platform=linux/${BUILDARCH} \
     ${BUILD_CONTAINER_IMAGE}:40 \
     as build-uboot
 
