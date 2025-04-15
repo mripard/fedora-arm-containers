@@ -1,0 +1,39 @@
+{
+  "type": "gpt",
+  "partitions": [
+    {% for loader in loaders %}
+    {
+      "name": "{{ loader.name }}",
+      "uuid": "8da63339-0007-60c0-c436-083ac8230908",
+      {%- if loader.offset_lba is defined %}
+      "offset_lba": {{ loader.offset_lba }},
+      {%- endif %}
+      "size_bytes": {{ loader.size_mb * 1024 * 1024 }},
+      "platform-required": true,
+      "fs": {
+        "type": "raw",
+        "content": "{{ loader.file }}"
+      }
+    },
+    {% endfor -%}
+    {
+      "name": "esp",
+      "uuid": "c12a7328-f81f-11d2-ba4b-00a0c93ec93b",
+      "mnt": "/boot/efi",
+      "size_bytes": {{ 512 * 1024 * 1024 }},
+      "bootable": true,
+      "platform-required": true,
+      "fs": {
+        "type": "fat"
+      }
+    },
+    {
+      "name": "root",
+      "uuid": "b921b045-1df0-41c3-af44-4c6f280d3fae",
+      "mnt": "/",
+      "fs": {
+        "type": "ext4"
+      }
+    }
+  ]
+}

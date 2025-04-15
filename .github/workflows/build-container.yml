@@ -9,6 +9,10 @@ on:
         required: true
         type: string
 
+      board_dir:
+        required: true
+        type: string
+
       containerfile:
         required: true
         type: string
@@ -36,12 +40,28 @@ jobs:
     runs-on: ubuntu-24.04-arm
 
     steps:
-      - name: Install Buildah & Podman
+      - name: Install Packages
         run: |
           sudo apt-get update
-          sudo apt-get install -y buildah podman
+          sudo apt-get install -y buildah jq podman
+
+      - name: Install PIP packages
+        run: |
+          pip install jinja2-cli
 
       - uses: actions/checkout@v4
+
+      - name: Create Variables
+        id: pt
+        run: |
+          JSON=$(jinja2 "${{ inputs.board_dir }}/partition-table.json.j2" "${{ inputs.board_dir }}/partition-table-data.json" | jq -c)
+          echo "json=$JSON" >> $GITHUB_OUTPUT
+          ESP_VOL_ID=$("${{ inputs.board_dir }}/partition-table-data.json" | jq -r '.esp.fat.volume_id')
+          echo "esp_vol_id=$ESP_VOL_ID" >> $GITHUB_OUTPUT
+          BOOT_UUID=$("${{ inputs.board_dir }}/partition-table-data.json" | jq -r '.boot.ext4.uuid')
+          echo "boot_uuid=$BOOT_UUID" >> $GITHUB_OUTPUT
+          ROOT_UUID=$("${{ inputs.board_dir }}/partition-table-data.json" | jq -r '.root.ext4.uuid')
+          echo "root_uuid=$ROOT_UUID" >> $GITHUB_OUTPUT
 
       - name: Build Image
         id: build_image
@@ -49,6 +69,12 @@ jobs:
         with:
           image: ${{ inputs.image_name }}
           tags: ${{ github.sha }}
+          envs: |
+            BUILD_MBR_PART_ESP_FS_VOL_ID=${{ steps.pt.outputs.esp_vol_id }}
+            BUILD_MBR_PART_BOOT_FS_UUID=${{ steps.pt.outputs.boot_uuid }}
+            BUILD_MBR_PART_ROOT_FS_UUID=${{ steps.pt.outputs.root_uuid }}
+          labels: |
+            com.github.mripard.ocibootstrap.table.json=${{ steps.pt.outputs.json }}
           containerfiles: |
             ${{ inputs.containerfile }}
 
@@ -85,7 +111,7 @@ jobs:
         with:
           crate: ocibootstrap
           git: https://github.com/mripard/ocibootstrap
-          commit: 39cbcc00975178bc53d61e69e8018dbe2e1b28f0
+          commit: 005a773c0b890f4abcfc7aa9853896628a2033b9
 
       - name: Download Container Archive
         uses: actions/download-artifact@v4

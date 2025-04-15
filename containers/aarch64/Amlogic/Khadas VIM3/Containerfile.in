@@ -1,9 +1,5 @@
 #include "include/Containerfile.header"
 
-ARG BUILD_MBR_PART_ESP_FS_VOL_ID="fa69a3da"
-ARG BUILD_MBR_PART_BOOT_FS_UUID="8eaab04b-e45e-479a-b1fc-e279146db775"
-ARG BUILD_MBR_PART_ROOT_FS_UUID="ea3cd769-1ace-4cbb-bce2-1bb7551b16dc"
-
 #include "include/Containerfile.build.mbr"
 
 FROM --platform=linux/${BUILDARCH} \
@@ -59,33 +55,6 @@ RUN \
 
 FROM --platform=linux/arm64 \
     ${CONTAINER_IMAGE}:${CONTAINER_VERSION}
-
-ARG BUILD_MBR_PART_ESP_FS_VOL_ID
-ARG BUILD_MBR_PART_BOOT_FS_UUID
-ARG BUILD_MBR_PART_ROOT_FS_UUID
-
-LABEL com.github.mripard.ocibootstrap.table.partitions="[ \"loader\", \"esp\", \"boot\", \"root\" ]"
-LABEL com.github.mripard.ocibootstrap.table.type="mbr"
-LABEL com.github.mripard.ocibootstrap.partition.loader.fs="raw"
-LABEL com.github.mripard.ocibootstrap.partition.loader.raw.content="/u-boot.bin"
-LABEL com.github.mripard.ocibootstrap.partition.loader.size_mb="2"
-LABEL com.github.mripard.ocibootstrap.partition.loader.offset_lba="1"
-LABEL com.github.mripard.ocibootstrap.partition.loader.type="0xf8"
-LABEL com.github.mripard.ocibootstrap.partition.esp.flags.bootable="true"
-LABEL com.github.mripard.ocibootstrap.partition.esp.fs="fat"
-LABEL com.github.mripard.ocibootstrap.partition.esp.fat.vol_id="$BUILD_MBR_PART_ESP_FS_VOL_ID"
-LABEL com.github.mripard.ocibootstrap.partition.esp.mount_point="/boot/efi"
-LABEL com.github.mripard.ocibootstrap.partition.esp.size_mb="256"
-LABEL com.github.mripard.ocibootstrap.partition.esp.type="0x0c"
-LABEL com.github.mripard.ocibootstrap.partition.boot.fs="ext4"
-LABEL com.github.mripard.ocibootstrap.partition.boot.ext4.uuid="$BUILD_MBR_PART_BOOT_FS_UUID"
-LABEL com.github.mripard.ocibootstrap.partition.boot.mount_point="/boot"
-LABEL com.github.mripard.ocibootstrap.partition.boot.size_mb="256"
-LABEL com.github.mripard.ocibootstrap.partition.boot.type="0x83"
-LABEL com.github.mripard.ocibootstrap.partition.root.fs="ext4"
-LABEL com.github.mripard.ocibootstrap.partition.root.ext4.uuid="$BUILD_MBR_PART_ROOT_FS_UUID"
-LABEL com.github.mripard.ocibootstrap.partition.root.mount_point="/"
-LABEL com.github.mripard.ocibootstrap.partition.root.type="0x83"
 
 COPY overlays/common/mbr/ /
 COPY overlays/aarch64/amlogic/a311d/ /

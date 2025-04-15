@@ -1,0 +1,10 @@
+{
+  "loaders": [
+    {
+      "name": "loader",
+      "file": "/flash.bin",
+      "size_mb": 2,
+      "offset_lba": 64
+    }
+  ]
+}

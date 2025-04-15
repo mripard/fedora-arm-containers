@@ -78,24 +78,6 @@ RUN \
 FROM --platform=linux/arm64 \
     ${CONTAINER_IMAGE}:${CONTAINER_VERSION}
 
-LABEL com.github.mripard.ocibootstrap.table.partitions="[ \"loader\", \"esp\", \"root\" ]"
-LABEL com.github.mripard.ocibootstrap.table.type="gpt"
-LABEL com.github.mripard.ocibootstrap.partition.loader.fs="raw"
-LABEL com.github.mripard.ocibootstrap.partition.loader.raw.content="/flash.bin"
-LABEL com.github.mripard.ocibootstrap.partition.loader.size_mb="2"
-LABEL com.github.mripard.ocibootstrap.partition.loader.offset_lba="64"
-LABEL com.github.mripard.ocibootstrap.partition.loader.flags.required="true"
-LABEL com.github.mripard.ocibootstrap.partition.loader.partition_uuid="8da63339-0007-60c0-c436-083ac8230908"
-LABEL com.github.mripard.ocibootstrap.partition.esp.flags.bootable="true"
-LABEL com.github.mripard.ocibootstrap.partition.esp.flags.required="true"
-LABEL com.github.mripard.ocibootstrap.partition.esp.fs="fat"
-LABEL com.github.mripard.ocibootstrap.partition.esp.mount_point="/boot/efi"
-LABEL com.github.mripard.ocibootstrap.partition.esp.partition_uuid="c12a7328-f81f-11d2-ba4b-00a0c93ec93b"
-LABEL com.github.mripard.ocibootstrap.partition.esp.size_mb="512"
-LABEL com.github.mripard.ocibootstrap.partition.root.fs="ext4"
-LABEL com.github.mripard.ocibootstrap.partition.root.mount_point="/"
-LABEL com.github.mripard.ocibootstrap.partition.root.partition_uuid="b921b045-1df0-41c3-af44-4c6f280d3fae"
-
 COPY overlays/common/gpt/ /
 COPY overlays/aarch64/nxp/imx8mp/ /
 
