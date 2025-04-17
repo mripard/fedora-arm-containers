@@ -21,6 +21,7 @@ ARG BUILD_DIR_R5
 
 RUN \
 	dnf5 install -y \
+		awk \
 		bc \
 		bison \
 		bzip2 \

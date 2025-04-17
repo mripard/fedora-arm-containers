@@ -1,16 +1,10 @@
 {
   "loaders": [
     {
-      "name": "loader1",
-      "file": "/idbloader.img",
-      "size_mb": 4,
+      "name": "loader",
+      "file": "/u-boot-rockchip.bin",
+      "size_mb": 16,
       "offset_lba": 64
-    },
-    {
-      "name": "loader2",
-      "file": "/u-boot.itb",
-      "size_mb": 4,
-      "offset_lba": 16384
     }
   ]
 }
