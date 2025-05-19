@@ -1,0 +1,140 @@
+#include "include/Containerfile.header"
+
+ARG BUILD_DIR_R5=/build/r5/
+ARG BUILD_DIR_A72=/build/a72/
+
+#include "include/Containerfile.build.mbr"
+
+FROM --platform=linux/${BUILDARCH} \
+    ${BUILD_CONTAINER_IMAGE}:${CONTAINER_VERSION} \
+    as build-uboot
+
+ARG AARCH32_CROSS_COMPILE=arm-linux-gnu-
+ARG AARCH64_CROSS_COMPILE=aarch64-linux-gnu-
+ARG TI_FIRMWARE_VERSION=11.00.13
+
+ARG ATF_VERSION
+ARG OPTEE_VERSION
+ARG UBOOT_VERSION
+ARG BUILD_DIR_A72
+ARG BUILD_DIR_R5
+
+RUN \
+	dnf5 install -y \
+		bc \
+		bison \
+		bzip2 \
+		dtc \
+		flex \
+		gcc \
+		gcc-aarch64-linux-gnu \
+		gcc-arm-linux-gnu \
+		gnutls-devel \
+		libuuid-devel \
+		make \
+		ncurses-devel \
+		openssl \
+		openssl-devel \
+		openssl-devel-engine \
+		perl-interpreter \
+		python3-cryptography \
+		python3-devel \
+		python3-jsonschema \
+		python3-libfdt \
+		python3-pyelftools \
+		python3-pyyaml \
+		python3-setuptools \
+		swig \
+		tar \
+		wget \
+		yamllint \
+	&& \
+	wget https://git.ti.com/cgit/processor-firmware/ti-linux-firmware/snapshot/ti-linux-firmware-${TI_FIRMWARE_VERSION}.tar.gz \
+	&& \
+	tar xvf ./ti-linux-firmware-${TI_FIRMWARE_VERSION}.tar.gz \
+	&& \
+	wget \
+		https://github.com/ARM-software/arm-trusted-firmware/archive/refs/tags/v${ATF_VERSION}.tar.gz \
+		-O atf-${ATF_VERSION}.tar.gz \
+	&& \
+	tar xvf ./atf-${ATF_VERSION}.tar.gz \
+	&& \
+	make \
+		CROSS_COMPILE=${AARCH64_CROSS_COMPILE} \
+		ARCH=aarch64 \
+		PLAT=k3 \
+		SPD=opteed \
+		TARGET_BOARD=j784s4 \
+		K3_USART=0x8 \
+		-C ./arm-trusted-firmware-${ATF_VERSION} \
+		-j $(nproc) \
+	&& \
+	wget \
+		https://github.com/OP-TEE/optee_os/archive/refs/tags/${OPTEE_VERSION}.tar.gz \
+		-O optee-${OPTEE_VERSION}.tar.gz \
+	&& \
+	tar xvf ./optee-${OPTEE_VERSION}.tar.gz \
+	&& \
+	make \
+		CROSS_COMPILE=${AARCH32_CROSS_COMPILE} \
+		CROSS_COMPILE64=${AARCH64_CROSS_COMPILE} \
+		CFG_ARM64_core=y \
+		PLATFORM=k3-j784s4 \
+		CFG_CONSOLE_UART=0x8 \
+		-C ./optee_os-${OPTEE_VERSION} \
+		-j $(nproc) \
+	&& \
+	wget https://ftp.denx.de/pub/u-boot/u-boot-${UBOOT_VERSION}.tar.bz2 \
+	&& \
+	tar xvf ./u-boot-${UBOOT_VERSION}.tar.bz2 \
+	&& \
+	make \
+		ARCH=arm \
+		CROSS_COMPILE=${AARCH32_CROSS_COMPILE} \
+		-C u-boot-${UBOOT_VERSION} \
+		O=${BUILD_DIR_R5} \
+		j784s4_evm_r5_defconfig \
+	&& \
+	ls -l $(pwd)/ti-linux-firmware-${TI_FIRMWARE_VERSION} \
+	&& \
+	make \
+		ARCH=arm \
+		CROSS_COMPILE=${AARCH32_CROSS_COMPILE} \
+		BINMAN_INDIRS=$(pwd)/ti-linux-firmware-${TI_FIRMWARE_VERSION} \
+		-C u-boot-${UBOOT_VERSION} \
+		O=${BUILD_DIR_R5} \
+		-j $(nproc) \
+	&& \
+	make \
+		ARCH=arm \
+		CROSS_COMPILE=${AARCH64_CROSS_COMPILE} \
+		-C u-boot-${UBOOT_VERSION} \
+		O=${BUILD_DIR_A72} \
+		j784s4_evm_a72_defconfig \
+	&& \
+	make \
+		ARCH=arm \
+		CROSS_COMPILE=${AARCH64_CROSS_COMPILE} \
+		BINMAN_INDIRS=$(pwd)/ti-linux-firmware-${TI_FIRMWARE_VERSION} \
+		BL31=$(pwd)/arm-trusted-firmware-${ATF_VERSION}/build/k3/j784s4/release/bl31.bin \
+		TEE=$(pwd)/optee_os-${OPTEE_VERSION}/out/arm-plat-k3/core/tee-raw.bin \
+		-C u-boot-${UBOOT_VERSION} \
+		O=${BUILD_DIR_A72} \
+		-j $(nproc)
+
+FROM --platform=linux/arm64 \
+    ${CONTAINER_IMAGE}:${CONTAINER_VERSION}
+
+ARG BUILD_DIR_A72
+ARG BUILD_DIR_R5
+
+COPY overlays/common/mbr/ /
+COPY overlays/aarch64/ti/am625/ /
+
+#include "include/Containerfile.target.mbr"
+
+COPY --from=build-uboot ${BUILD_DIR_R5}/tiboot3-j784s4-hs-fs-evm.bin /boot/efi/tiboot3.bin
+COPY --from=build-uboot ${BUILD_DIR_A72}/tispl.bin /boot/efi/tispl.bin
+COPY --from=build-uboot ${BUILD_DIR_A72}/u-boot.img /boot/efi/u-boot.img
+
+CMD ["/bin/sh"]
