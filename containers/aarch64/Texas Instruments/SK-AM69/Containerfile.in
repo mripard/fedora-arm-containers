@@ -1,7 +1,7 @@
 #include "include/Containerfile.header"
 
 ARG BUILD_DIR_R5=/build/r5/
-ARG BUILD_DIR_A53=/build/a53/
+ARG BUILD_DIR_A72=/build/a72/
 
 #include "include/Containerfile.build.mbr"
 
@@ -15,8 +15,8 @@ ARG TI_FIRMWARE_VERSION=11.00.13
 
 ARG ATF_VERSION
 ARG OPTEE_VERSION
-ARG UBOOT_VERSION
-ARG BUILD_DIR_A53
+ARG UBOOT_VERSION=2025.07-rc2
+ARG BUILD_DIR_A72
 ARG BUILD_DIR_R5
 
 RUN \
@@ -64,7 +64,8 @@ RUN \
 		ARCH=aarch64 \
 		PLAT=k3 \
 		SPD=opteed \
-		TARGET_BOARD=lite \
+		TARGET_BOARD=j784s4 \
+		K3_USART=0x8 \
 		-C ./arm-trusted-firmware-${ATF_VERSION} \
 		-j $(nproc) \
 	&& \
@@ -78,8 +79,8 @@ RUN \
 		CROSS_COMPILE=${AARCH32_CROSS_COMPILE} \
 		CROSS_COMPILE64=${AARCH64_CROSS_COMPILE} \
 		CFG_ARM64_core=y \
-		CFG_WITH_SOFTWARE_PRNG=y \
-		PLATFORM=k3-am62x \
+		PLATFORM=k3-j784s4 \
+		CFG_CONSOLE_UART=0x8 \
 		-C ./optee_os-${OPTEE_VERSION} \
 		-j $(nproc) \
 	&& \
@@ -92,7 +93,7 @@ RUN \
 		CROSS_COMPILE=${AARCH32_CROSS_COMPILE} \
 		-C u-boot-${UBOOT_VERSION} \
 		O=${BUILD_DIR_R5} \
-		am62x_evm_r5_defconfig \
+		j784s4_evm_r5_defconfig \
 	&& \
 	ls -l $(pwd)/ti-linux-firmware-${TI_FIRMWARE_VERSION} \
 	&& \
@@ -108,23 +109,23 @@ RUN \
 		ARCH=arm \
 		CROSS_COMPILE=${AARCH64_CROSS_COMPILE} \
 		-C u-boot-${UBOOT_VERSION} \
-		O=${BUILD_DIR_A53} \
-		am62x_evm_a53_defconfig \
+		O=${BUILD_DIR_A72} \
+		j784s4_evm_a72_defconfig \
 	&& \
 	make \
 		ARCH=arm \
 		CROSS_COMPILE=${AARCH64_CROSS_COMPILE} \
 		BINMAN_INDIRS=$(pwd)/ti-linux-firmware-${TI_FIRMWARE_VERSION} \
-		BL31=$(pwd)/arm-trusted-firmware-${ATF_VERSION}/build/k3/lite/release/bl31.bin \
+		BL31=$(pwd)/arm-trusted-firmware-${ATF_VERSION}/build/k3/j784s4/release/bl31.bin \
 		TEE=$(pwd)/optee_os-${OPTEE_VERSION}/out/arm-plat-k3/core/tee-raw.bin \
 		-C u-boot-${UBOOT_VERSION} \
-		O=${BUILD_DIR_A53} \
+		O=${BUILD_DIR_A72} \
 		-j $(nproc)
 
 FROM --platform=linux/arm64 \
     ${CONTAINER_IMAGE}:${CONTAINER_VERSION}
 
-ARG BUILD_DIR_A53
+ARG BUILD_DIR_A72
 ARG BUILD_DIR_R5
 
 COPY overlays/common/mbr/ /
@@ -132,8 +133,8 @@ COPY overlays/aarch64/ti/am625/ /
 
 #include "include/Containerfile.target.mbr"
 
-COPY --from=build-uboot ${BUILD_DIR_R5}/tiboot3-am62x-gp-evm.bin /boot/efi/tiboot3.bin
-COPY --from=build-uboot ${BUILD_DIR_A53}/tispl.bin /boot/efi/tispl.bin
-COPY --from=build-uboot ${BUILD_DIR_A53}/u-boot.img /boot/efi/u-boot.img
+COPY --from=build-uboot ${BUILD_DIR_R5}/tiboot3-j784s4-hs-fs-evm.bin /boot/efi/tiboot3.bin
+COPY --from=build-uboot ${BUILD_DIR_A72}/tispl.bin /boot/efi/tispl.bin
+COPY --from=build-uboot ${BUILD_DIR_A72}/u-boot.img /boot/efi/u-boot.img
 
 CMD ["/bin/sh"]
