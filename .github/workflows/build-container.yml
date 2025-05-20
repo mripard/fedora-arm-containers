@@ -69,7 +69,7 @@ jobs:
         with:
           image: ${{ inputs.image_name }}
           tags: ${{ github.sha }}
-          envs: |
+          build-args: |
             BUILD_MBR_PART_ESP_FS_VOL_ID=${{ steps.pt.outputs.esp_vol_id }}
             BUILD_MBR_PART_BOOT_FS_UUID=${{ steps.pt.outputs.boot_uuid }}
             BUILD_MBR_PART_ROOT_FS_UUID=${{ steps.pt.outputs.root_uuid }}
