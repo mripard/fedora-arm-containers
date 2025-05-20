@@ -80,6 +80,7 @@ FROM --platform=linux/arm64 \
 
 COPY overlays/common/gpt/ /
 COPY overlays/aarch64/nxp/imx8mp/ /
+COPY ["overlays/aarch64/nxp/boards/Debix Model A", "/"]
 
 #include "include/Containerfile.target.gpt"
 
