@@ -56,11 +56,11 @@ jobs:
         run: |
           JSON=$(jinja2 "${{ inputs.board_dir }}/partition-table.json.j2" "${{ inputs.board_dir }}/partition-table-data.json" | jq -c)
           echo "json=$JSON" >> $GITHUB_OUTPUT
-          ESP_VOL_ID=$("${{ inputs.board_dir }}/partition-table-data.json" | jq -r '.esp.fat.volume_id')
+          ESP_VOL_ID=$(cat "${{ inputs.board_dir }}/partition-table-data.json" | jq -r '.esp.fat.volume_id')
           echo "esp_vol_id=$ESP_VOL_ID" >> $GITHUB_OUTPUT
-          BOOT_UUID=$("${{ inputs.board_dir }}/partition-table-data.json" | jq -r '.boot.ext4.uuid')
+          BOOT_UUID=$(cat "${{ inputs.board_dir }}/partition-table-data.json" | jq -r '.boot.ext4.uuid')
           echo "boot_uuid=$BOOT_UUID" >> $GITHUB_OUTPUT
-          ROOT_UUID=$("${{ inputs.board_dir }}/partition-table-data.json" | jq -r '.root.ext4.uuid')
+          ROOT_UUID=$(cat "${{ inputs.board_dir }}/partition-table-data.json" | jq -r '.root.ext4.uuid')
           echo "root_uuid=$ROOT_UUID" >> $GITHUB_OUTPUT
 
       - name: Build Image
