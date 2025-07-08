@@ -8,7 +8,6 @@ ARG UBOOT_VERSION
 
 RUN \
 	dnf5 install -y \
-		awk \
 		bc \
 		bison \
 		bzip2 \

@@ -16,6 +16,7 @@ COPY overlays/aarch64/rockchip/rk3399/ /
 
 #include "include/Containerfile.target.gpt"
 
-COPY --from=build-uboot /usr/share/uboot/pinephone-pro-rk3399/u-boot-rockchip.bin /
+COPY --from=build-uboot /usr/share/uboot/pinephone-pro-rk3399/idbloader.img /
+COPY --from=build-uboot /usr/share/uboot/pinephone-pro-rk3399/u-boot.itb /
 
 CMD ["/bin/sh"]

@@ -13,7 +13,6 @@ ENV CROSS_COMPILE=aarch64-linux-gnu-
 
 RUN \
 	dnf5 install -y \
-		awk \
 		bc \
 		bison \
 		bzip2 \
